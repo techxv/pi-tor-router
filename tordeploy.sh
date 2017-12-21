@@ -31,6 +31,9 @@ iface eth1 inet static
         netmask 255.255.255.0
 " >> /etc/network/interfaces
 
+## ENABLES AND DISABLES eth1
+sudo ifdown eth1 && sudo ifup eth1
+
 ## UNCOMMENTS net-ipv4.ip_forward=1 AT /etc/sysctl.conf
 sudo sed -i '/net.ipv4.ip_forward=1/s/^#//g' /etc/sysctl.conf
 
@@ -46,7 +49,7 @@ echo "option broadcast-address 192.168.45.255;" >> /etc/dhcp/dhcpd.conf
 echo "option routers 192.168.45.1;" >> /etc/dhcp/dhcpd.conf
 echo "default-lease-time 600;" >> /etc/dhcp/dhcpd.conf
 echo "max-lease-time 7200;" >> /etc/dhcp/dhcpd.conf
-echo "option domain-name "local";" >> /etc/dhcp/dhcpd.conf
+echo "option domain-name \"local\";" >> /etc/dhcp/dhcpd.conf
 echo "option domain-name-servers 192.168.45.1;" >> /etc/dhcp/dhcpd.conf
 echo "}" >> /etc/dhcp/dhcpd.conf
 
@@ -93,6 +96,8 @@ sudo iptables -I FORWARD -d 10.0.0.0/8 -i eth1 -j DROP
 sudo iptables -t nat -A PREROUTING -i eth1 -p tcp -m tcp --dport 22 -j REDIRECT --to-ports 22
 sudo iptables -t nat -A PREROUTING -i eth1 -p udp -m udp --dport 53 -j REDIRECT --to-ports 53
 sudo iptables -t nat -A PREROUTING -i eth1 -p tcp -m tcp --tcp-flags FIN,SYN,RST,ACK SYN -j REDIRECT --to-ports 9040
+sudo iptables -A FORWARD -p icmp --icmp-type echo-request -j DROP
+sudo iptables -A FORWARD -p icmp --icmp-type echo-reply -j DROP
 
 ## SAVES IPTABLES
 sudo iptables-save >> /etc/iptables/rules.v4
@@ -102,4 +107,8 @@ sudo systemctl enable isc-dhcp-server
 sudo service isc-dhcp-server start
 sudo systemctl enable tor
 sudo service tor start
+
+## REBOOTS THE SYSTEM
+sudo reboot
+
 
